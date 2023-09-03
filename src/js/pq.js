@@ -95,18 +95,6 @@ async function loadBinaryFile(filePath) {
   }
 }
 
-loadBinaryFile(filePath)
-  .then((vectors) => {
-    if (vectors) {
-      // Do something with the loaded vectors here
-      console.log(`Loaded ${vectors.length} vectors.`);
-      console.log(vectors[0]); // Access the first vector
-    }
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
 const codewords = require('./codewords.json');
 
 let query = "Audiovisual rights in sports events";
@@ -115,10 +103,31 @@ let result = encode(observation.data, codewords, 96, 4, Uint8Array);
 console.log(result);
 
 
-const filePath = 'embeddings.bin'; // Replace with the actual file path
 
 
+const filePath = 'X_code_4.bin';
+const fs = require("fs");
 
+function loadBinaryFile(filePath) {
+  try {
+    const binaryData = fs.readFileSync(filePath);
 
+    // Assuming the file contains multiple 384-sized uint8 vectors
+    const vectors = [];
+    //const vectorSize = 384;
+    const vectorSize = 16;
 
+    for (let i = 0; i < binaryData.length; i += vectorSize) {
+      const vector = binaryData.slice(i, i + vectorSize);
+      vectors.push(new Uint8Array(vector)); // Cast to Uint8Array
+    }
+
+    return vectors;
+  } catch (error) {
+    console.error(`Error loading binary file: ${error.message}`);
+    return null;
+  }
+}
+
+const vectors = loadBinaryFile(filePath);
 
