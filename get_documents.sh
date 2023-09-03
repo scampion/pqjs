@@ -17,3 +17,5 @@ cat results.json | jq | grep url  |grep EN.pdf |  sed 's/^.*http/http/g' | sed '
 # Build filenames list
 cat results.json | jq | grep url  |grep EN.pdf |  sed 's/^.*http/http/g' | sed 's/".*$//'  | cut -d'/' -f 9 | sort -u > filenames.txt
 
+# After index
+cat  index.json| jq .filename | sort -u | sed s/\"//g > documents.txt

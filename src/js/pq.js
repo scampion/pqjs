@@ -97,7 +97,7 @@ async function loadBinaryFile(filePath) {
 
 const codewords = require('./codewords.json');
 
-let query = "Audiovisual rights in sports events";
+let query = "Audiovisual rights in sports events"; // 599320
 let observation = await extractor(query, {pooling: "mean", normalize: true});
 let result = encode(observation.data, codewords, 96, 4, Uint8Array);
 console.log(result);
@@ -131,3 +131,82 @@ function loadBinaryFile(filePath) {
 
 const vectors = loadBinaryFile(filePath);
 
+// Function to compute distances between a query vector and a list of vectors
+function computeDistances(queryVector, vectorList) {
+  const distances = [];
+  for (const vector of vectorList) {
+    const distance = euclideanDistance(queryVector, vector);
+    distances.push(distance);
+  }
+  return distances;
+}
+
+
+
+function euclideanDistance(vector1, vector2) {
+  if (vector1.length !== vector2.length) {
+    throw new Error("Vector dimensions do not match " + vector1.length + " != " + vector2.length);
+  }
+
+  let sum = 0;
+  for (let i = 0; i < vector1.length; i++) {
+    const diff = vector1[i] - vector2[i];
+    sum += diff * diff;
+  }
+
+  return Math.sqrt(sum);
+}
+
+// Function to compute indices of sorted distances between a query vector and a list of vectors
+function computeSortedIndices(queryVector, vectorList) {
+  const distancesWithIndices = [];
+  for (let i = 0; i < vectorList.length; i++) {
+    const vector = vectorList[i];
+    try {
+        const distance = euclideanDistance(queryVector, vector);
+        distancesWithIndices.push({ index: i, distance: distance });
+    } catch (error) {
+        console.error(`Error computing distance for vector ${i}: ${error.message} ` + vector.length + " != " + queryVector.length);
+    }
+  }
+
+  // Sort the distancesWithIndices array based on distances
+  distancesWithIndices.sort((a, b) => a.distance - b.distance);
+
+  // Extract and return the sorted indices
+  const sortedIndices = distancesWithIndices.map((item) => item.index);
+  return sortedIndices;
+}
+
+
+
+
+const sortedIndices = computeSortedIndices(result, vectors);
+//console.log("Sorted Indices:", sortedIndices.subarray(0, 50));
+
+
+let documents;
+fs.readFile('documents.txt', 'utf8', (err, data) => {
+    if (err) {
+        console.error(err);
+        return;
+    }
+    // Split the file contents into an array of lines
+    documents = data.split('\n');
+});
+
+
+const indData = fs.readFileSync("index.bin");
+// Create a DataView to read the binary data as uint16 values
+const dataView = new DataView(indData.buffer);
+const uint16Array = [];
+for (let i = 0; i < dataView.byteLength; i += 2) {
+    const uint16Value = dataView.getUint16(i, true); // 'true' for little-endian format
+    uint16Array.push(uint16Value);
+}
+
+const indices = new Uint16Array(uint16Array);
+
+for(let i = 0; i < 60; i++){
+    console.log(i + " : " + documents[indices[sortedIndices[i]]]);
+}

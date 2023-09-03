@@ -19,5 +19,8 @@ if __name__ == "__main__":
           data.pop("texts")
         ind.write(json.dumps(data)+"\n")
     
-
-
+#
+documents = [d.strip() for d in open('documents.txt').readlines()]
+i =  np.array([documents.index(json.loads(r)['filename']) for r in open("index.json").readlines()])
+i = i.astype('uint16')
+open("index.bin","wb").write(i.tobytes())
