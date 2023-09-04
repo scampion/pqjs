@@ -1,3 +1,7 @@
+cache/
+codewords.json
+documents.json
+public/
 .idea
 __pycache__
 *.pdf

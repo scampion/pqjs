@@ -1,7 +1,5 @@
 let transformer = await import("@xenova/transformers")
 let extractor = await transformer.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-
-
 function vq(obs, code_book) {
     if (!obs || !Array.isArray(obs) || obs.length === 0 || !code_book || !Array.isArray(code_book) || code_book.length === 0) {
         throw new Error('Invalid input. Both observation and code_book must be non-empty arrays.');
