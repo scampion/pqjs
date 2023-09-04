@@ -5,7 +5,7 @@ documents.json:
 	@python3 scripts/documents.py 10000 > documents.json
 
 
-embeddings.bin: documents.json
+vectors.bin: documents.json
 	if [ -e embeddings.lock ]; then \
 		echo "embeddings.lock exists, stopping here a process is already running"; \
 		exit 1; \
@@ -14,9 +14,10 @@ embeddings.bin: documents.json
 	@touch embeddings.lock
 	@python3 scripts/embeddings.py
 	@rm embeddings.lock
+    @mv embeddings.bin vectors.bin
 
 
-pq.bin: embeddings.bin
+pq.bin: vectors.bin
 	@echo "Generating pq.bin"
 	@python3 scripts/pq.py
 
@@ -24,7 +25,7 @@ public:
 	@echo "Generating public files"
 	@mkdir -p public
 	@cp documents.json public/documents.json
-	@cp embeddings.bin public/embeddings.bin
+	@cp vectors.bin public/vectors.bin
 	@cp indices.bin public/indices.bin
 	@cp codewords.json public/codewords.json
 	@cp pq.bin public/pq.bin
@@ -34,4 +35,4 @@ public:
 
 clean:
 	@echo "Cleaning up"
-	@rm -f embeddings.bin pq.bin indices.bin public/documents.json public/embeddings.bin public/indices.bin public/codewords.json public/pq.bin public/pq.js
+	@rm -f vectors.bin pq.bin indices.bin public/documents.json public/vectors.bin public/indices.bin public/codewords.json public/pq.bin public/pq.js
