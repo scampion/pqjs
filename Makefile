@@ -1,4 +1,4 @@
-all: documents.json embeddings.bin pq.bin public
+all: documents.json vectors.bin pq.bin public
 
 documents.json:
 	@echo "Generating documents.json"
@@ -6,7 +6,7 @@ documents.json:
 
 
 vectors.bin: documents.json
-	if [ -e embeddings.lock ]; then \
+	@if [ -e embeddings.lock ]; then \
 		echo "embeddings.lock exists, stopping here a process is already running"; \
 		exit 1; \
 	fi
@@ -14,7 +14,7 @@ vectors.bin: documents.json
 	@touch embeddings.lock
 	@python3 scripts/embeddings.py
 	@rm embeddings.lock
-    @mv embeddings.bin vectors.bin
+	@mv embeddings.bin vectors.bin
 
 
 pq.bin: vectors.bin

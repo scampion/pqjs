@@ -2,6 +2,7 @@ import io
 import json
 import sys
 
+from tqdm import tqdm
 import requests
 from joblib import Memory
 from pdfminer.high_level import extract_pages
@@ -33,7 +34,7 @@ def compute_embeddings(conf):
 
     ids = [doc['id'] for doc in documents]
     with open("embeddings.bin", "wb") as emb, open("indices.bin", "wb") as ind:
-        for doc in documents:
+        for doc in tqdm(documents):
             for _, texts in get_pages_content(doc['url']):
                 for embedding in model.encode(texts):
                     emb.write(embedding.tobytes())
