@@ -18,9 +18,11 @@ def get_binary_pdf_from_url(url):
 
 def get_pages_content(url):
     iofile = get_binary_pdf_from_url(url)
-    for page_number, page_layout in enumerate(extract_pages(iofile)):
-        yield page_number, [element.get_text() for element in page_layout if isinstance(element, LTTextContainer)]
-
+    try:
+      for page_number, page_layout in enumerate(extract_pages(iofile)):
+          yield page_number, [element.get_text() for element in page_layout if isinstance(element, LTTextContainer)]
+    except Exception as e:
+      print(f"💥 Error with url {url} : " + str(e))
 
 def compute_embeddings(conf):
     documents_file = conf.get('documents', 'documents.json')

@@ -28,4 +28,4 @@ public:
 
 clean:
 	@echo "Cleaning up"
-	@rm -f documents.json embeddings.bin pq.bin indices.bin public/documents.json public/embeddings.bin public/indices.bin public/codewords.json public/pq.bin public/pq.js
+	@rm -f embeddings.bin pq.bin indices.bin public/documents.json public/embeddings.bin public/indices.bin public/codewords.json public/pq.bin public/pq.js
