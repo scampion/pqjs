@@ -2,12 +2,18 @@ all: documents.json embeddings.bin pq.bin public
 
 documents.json:
 	@echo "Generating documents.json"
-	@python3 scripts/collect_documents.py 10000 > documents.json
+	@python3 scripts/documents.py 10000 > documents.json
 
 
 embeddings.bin: documents.json
+	if [ -e embeddings.lock ]; then \
+		echo "embeddings.lock exists, stopping here a process is already running"; \
+		exit 1; \
+	fi
 	@echo "Generating embeddings.bin"
+	@touch embeddings.lock
 	@python3 scripts/embeddings.py
+	@rm embeddings.lock
 
 
 pq.bin: embeddings.bin
