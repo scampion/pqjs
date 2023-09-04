@@ -14,9 +14,11 @@ def compute_pq(conf):
     pq = nanopq.PQ(M=M)
     pq.fit(X)
     X_code = pq.encode(X)
+    print("vectors ", X_code.shape)
     open("pq.bin", "wb").write(X_code.tobytes())
     with open("codewords.json", "w") as f:
         json.dump(pq.codewords.tolist(), f)
+    pq.save("pq.pkl")
 
 
 if __name__ == "__main__":

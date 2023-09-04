@@ -11,6 +11,7 @@ from sentence_transformers import SentenceTransformer
 
 memory = Memory("cache", verbose=0)
 
+
 @memory.cache
 def get_binary_pdf_from_url(url):
     r = requests.get(url)
@@ -20,10 +21,11 @@ def get_binary_pdf_from_url(url):
 def get_pages_content(url):
     iofile = get_binary_pdf_from_url(url)
     try:
-      for page_number, page_layout in enumerate(extract_pages(iofile)):
-          yield page_number, [element.get_text() for element in page_layout if isinstance(element, LTTextContainer)]
+        for page_number, page_layout in enumerate(extract_pages(iofile)):
+            yield page_number, [element.get_text() for element in page_layout if isinstance(element, LTTextContainer)]
     except Exception as e:
-      print(f"💥 Error with url {url} : " + str(e))
+        print(f"💥 Error with url {url} : " + str(e))
+
 
 def compute_embeddings(conf):
     documents_file = conf.get('documents', 'documents.json')
@@ -44,6 +46,3 @@ def compute_embeddings(conf):
 if __name__ == "__main__":
     conf = json.load(open(sys.argv[1])) if len(sys.argv) > 1 else {}
     compute_embeddings(conf)
-
-
-
