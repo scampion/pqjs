@@ -1,4 +1,5 @@
 import json
+import pickle
 import sys
 
 import nanopq
@@ -6,7 +7,7 @@ import numpy as np
 
 
 def compute_pq(conf):
-    embeddings_file = conf.get('embeddings', 'embeddings.bin')
+    embeddings_file = conf.get('embeddings', 'vectors.bin')
     dim = conf.get('dim', 384)
     M = conf.get('M', 8)
     X = np.frombuffer(open(embeddings_file, 'rb').read(), dtype="float32")
@@ -18,7 +19,8 @@ def compute_pq(conf):
     open("pq.bin", "wb").write(X_code.tobytes())
     with open("codewords.json", "w") as f:
         json.dump(pq.codewords.tolist(), f)
-    pq.save("pq.pkl")
+    with open('pq.pkl', 'wb') as f:
+        pickle.dump(pq, f)
 
 
 if __name__ == "__main__":

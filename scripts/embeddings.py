@@ -18,6 +18,11 @@ def get_binary_pdf_from_url(url):
     return io.BytesIO(r.content)
 
 
+@memory.cache
+def encode(texts, model):
+    return model.encode(texts)
+
+
 def get_pages_content(url):
     iofile = get_binary_pdf_from_url(url)
     try:
@@ -27,22 +32,25 @@ def get_pages_content(url):
         print(f"💥 Error with url {url} : " + str(e))
 
 
-def compute_embeddings(conf):
+def compute_embeddings(conf, model):
     documents_file = conf.get('documents', 'documents.json')
     documents = json.load(open(documents_file))
+    documents_with_embeddings = []
 
-    model_name = conf.get('model', 'sentence-transformers/all-MiniLM-L6-v2')
-    model = SentenceTransformer(model_name)
-
-    ids = [doc['id'] for doc in documents]
-    with open("embeddings.bin", "wb") as emb, open("indices.bin", "wb") as ind:
+    with open("embeddings.bin", "wb") as emb:
         for doc in tqdm(documents):
-            for _, texts in get_pages_content(doc['url']):
-                for embedding in model.encode(texts):
-                    emb.write(embedding.tobytes())
-                    ind.write(ids.index(doc['id']).to_bytes(8, byteorder='big', signed=False))
+            all_texts = [text for _, texts in get_pages_content(doc['url']) for text in texts]
+            embeddings = encode(all_texts, model)
+            emb.write(embeddings.tobytes())
+            doc['nb_of_embeddings'] = len(embeddings)
+            documents_with_embeddings.append(doc)
+
+    with open("documents_with_embeddings.json", "w") as f:
+        json.dump(documents_with_embeddings, f, indent=2)
 
 
 if __name__ == "__main__":
     conf = json.load(open(sys.argv[1])) if len(sys.argv) > 1 else {}
-    compute_embeddings(conf)
+    model_name = conf.get('model', 'sentence-transformers/all-MiniLM-L6-v2')
+    model = SentenceTransformer(model_name)
+    compute_embeddings(conf, model)
