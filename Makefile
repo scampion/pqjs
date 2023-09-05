@@ -19,18 +19,16 @@ vectors.bin: documents.json
 
 pq.bin: vectors.bin
 	@echo "Generating pq.bin"
-	@python3 scripts/pq.py
+	@python3 scripts/pq.py conf.json
 
 public:
 	@echo "Generating public files"
 	@mkdir -p public
-	@cp documents.json public/documents.json
+	@cp documents_with_embeddings.json public/documents.json
 	@cp vectors.bin public/vectors.bin
-	@cp indices.bin public/indices.bin
 	@cp codewords.json public/codewords.json
 	@cp pq.bin public/pq.bin
-	@cp pq.js public/pq.js
-	@cp index.html public/index.html
+	@cp conf.json public/conf.json
 
 
 clean:

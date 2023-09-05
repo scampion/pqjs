@@ -10,6 +10,7 @@ def compute_pq(conf):
     embeddings_file = conf.get('embeddings', 'vectors.bin')
     dim = conf.get('dim', 384)
     M = conf.get('M', 8)
+    print("Compute PQ with M ", M)
     X = np.frombuffer(open(embeddings_file, 'rb').read(), dtype="float32")
     X = np.reshape(X, (-1, dim))
     pq = nanopq.PQ(M=M)
