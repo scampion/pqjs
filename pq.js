@@ -96,7 +96,7 @@ async function loadBinaryFile(filePath, vectorSize) {
 }
 
 
-function readBinaryFileAndParseInt64s(filePath) {
+function loadIndices(filePath) {
   try {
     // Read the binary file synchronously.
     const data = fs.readFileSync(filePath);
@@ -124,36 +124,27 @@ function readBinaryFileAndParseInt64s(filePath) {
 
 
 
-
-
-async function loadIndices(filename) {
-      const data = fs.readFileSync(filename);
-  const integers = [];
-  for (let i = 0; i < data.length / 8; i++) {
-    integers.push(Number(data.slice(i * 8, (i + 1) * 8)));
-  }
-  return integers;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
+
 const conf = require('./conf.json');
 const documents = require('./documents.json');
-const indices = await readBinaryFileAndParseInt64s("indices.bin");
+const indices = await loadIndices("indices.bin");
 const vectors = await loadBinaryFile("pq.bin", conf['M']);
 const codewords = require('./codewords.json');
 
 let transformer = await import("@xenova/transformers");
 const model_name = conf['model'].split('/')[1];
 const model = 'Xenova/' + model_name;
-let extractor = await transformer.pipeline('feature-extraction', model);
+let pipeline = await transformer.pipeline('feature-extraction', model);
 
 let query = "Audiovisual rights in sports events"; // 599320
 console.log("Query: " + query);
 
-let observation = await extractor(query, {pooling: "mean", normalize: true});
+let observation = await pipeline(query, {pooling: "mean", quantized: false, normalize: true});
+// print first 40 values of the observation.data
+for(let i = 0; i < 40; i++) {
+    console.log(i + " : " + Math.floor(observation.data[i] * 1000));
+}
 let result = encode(observation.data, codewords, conf['dim'] / conf['M'], conf['M'], Uint8Array);
 console.log(result);
 

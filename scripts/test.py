@@ -1,6 +1,8 @@
 import json
 import sys
 import numpy as np
+import pickle
+
 
 from sentence_transformers import SentenceTransformer
 
@@ -10,14 +12,10 @@ model = SentenceTransformer(model_name)
 
 query = "Audiovisual rights in sports events"
 query = "Protection of journalists and human rights defenders from manifestly unfounded or abusive court proceedings"
-query ="analyses the kinds of compensation available to victims of climate change disasters in the EU"
+query = "analyses the kinds of compensation available to victims of climate change disasters in the EU"
 
 emb = model.encode(query)
-# for i, v in enumerate(emb.tolist()[:40]):
-#    print(f"{i} : {int(v * 1000)}")
 
-import nanopq
-import pickle
 
 pq = pickle.load(open("pq.pkl", "rb"))
 e = pq.encode(vecs=np.array([emb]))
@@ -49,13 +47,12 @@ def binary_search(arr, target):
 results = {}
 for i in np.argsort(dists):
     doc_i = binary_search(indices, i)
-
     results[doc_i] = results.get(doc_i, 0) + 1
     if len(results) > 5:
         break
-total = sum(results.values())
+
 # normalize
-results = {k: v / total for k, v in results.items()}
+results = {k: v / sum(results.values()) for k, v in results.items()}
 #sort by value
 results = {k: v for k, v in sorted(results.items(), key=lambda item: item[1], reverse=True)}
 #enrich with documents metadata
