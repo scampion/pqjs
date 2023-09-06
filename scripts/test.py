@@ -27,32 +27,52 @@ model = SentenceTransformer(model_name)
 #query = "Audiovisual rights in sports events"
 #query = "Protection of journalists and human rights defenders from manifestly unfounded or abusive court proceedings"
 #query = "analyses the kinds of compensation available to victims of climate change disasters in the EU"
-query = " ".join(sys.argv[2:])
-emb = model.encode(query)
+#query = " ".join(sys.argv[2:])
+#query = "organic pet food"
+
+query = open("query.txt").read()
+query = model.encode(query)
 
 
 pq = pickle.load(open("pq.pkl", "rb"))
-e = pq.encode(vecs=np.array([emb]))
+query_q = pq.encode(vecs=np.array([query]))[0]
 
 X_code = np.frombuffer(open("pq.bin", 'rb').read(), dtype="uint8")
 X_code = np.reshape(X_code, (-1, conf["M"]))
 print("vectors ", X_code.shape)
-dists = pq.dtable(query=emb).adist(codes=X_code)
+dists = pq.dtable(query=query).adist(codes=X_code)
 
 documents = json.load(open("documents_with_embeddings.json"))
 indices = [doc['nb_of_embeddings'] for doc in documents]
 for i in range(1, len(indices)):
     indices[i] += indices[i - 1]
 
-max_features = 1000
+max_features = 20
 results = {}
+
+print(np.sort(dists)[:max_features])
+
+print(np.min(dists)/np.sort(dists)[:max_features])
+
 for i in np.argsort(dists)[:max_features]:
     doc_i = binary_search(indices, i)
-    d = results.get(doc_i, [])
-    d.append(dists[i])
-    results[doc_i] = d
+    results[doc_i] = results.get(doc_i, 0) + np.min(dists)/dists[i]
 
-import IPython; IPython.embed()
+k_max = 100
+print("PQ sort")
+pq_r = np.argsort(dists)[:k_max]
+print(pq_r) if k_max < 20 else None
+
+X = np.frombuffer(open("vectors.bin", 'rb').read(), dtype="float32")
+X = np.reshape(X, (-1, 384))
+dists_exact = np.linalg.norm(X - query, axis=1) ** 2
+print("exact sort")
+ex_r = np.argsort(dists_exact)[:k_max]
+print(ex_r) if k_max < 20 else None
+
+print("Intersection ratio ", len(set(pq_r).intersection(set(ex_r))) / k_max)
+print("-"*80)
+
 #results = {k: len(v)/(sum(v)/len(v)) for k, v in results.items()}
 
 # normalize

@@ -13,7 +13,8 @@ def compute_pq(conf):
     print("Compute PQ with M ", M)
     X = np.frombuffer(open(embeddings_file, 'rb').read(), dtype="float32")
     X = np.reshape(X, (-1, dim))
-    pq = nanopq.PQ(M=M)
+    #pq = nanopq.PQ(M=M)
+    pq = nanopq.OPQ(M=M)
     pq.fit(X)
     X_code = pq.encode(X)
     print("vectors ", X_code.shape)
@@ -27,3 +28,4 @@ def compute_pq(conf):
 if __name__ == "__main__":
     conf = json.load(open(sys.argv[1])) if len(sys.argv) > 1 else {}
     compute_pq(conf)
+
