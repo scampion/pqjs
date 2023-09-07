@@ -33,4 +33,4 @@ public:
 
 clean:
 	@echo "Cleaning up"
-	@rm -f vectors.bin pq.bin indices.bin public/documents.json public/vectors.bin public/indices.bin public/codewords.json public/pq.bin public/pq.js
+	@rm -f documents_with_embeddings.json embeddings.bin embeddings.lock pq.pkl vectors.bin pq.bin codewords.json embeddings.log public/documents.json public/vectors.bin public/codewords.json public/pq.bin public/pq.js

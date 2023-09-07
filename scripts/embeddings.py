@@ -29,15 +29,22 @@ def encode(texts, model):
     return model.encode(texts)
 
 
+
+
+@memory.cache
 def get_pages_content(url):
-    iofile = get_binary_pdf_from_url(url)
-    try:
-        for page_number, page_layout in enumerate(extract_pages(iofile)):
-            for element in page_layout:
-                if isinstance(element, LTTextContainer):
-                    yield element.get_text()
-    except Exception as e:
-        print(f"💥 Error with url {url} : " + str(e))
+    def gen_text(url):
+        iofile = get_binary_pdf_from_url(url)
+        try:
+            for page_number, page_layout in enumerate(extract_pages(iofile)):
+                for element in page_layout:
+                    if isinstance(element, LTTextContainer):
+                        yield element.get_text()
+        except Exception as e:
+            print(f"💥 Error with url {url} : " + str(e))
+
+    text = "\n\n".join(gen_text(url))
+    return text.replace('. ', '.\n\n')
 
 
 def compute_embeddings(conf, model):
@@ -45,18 +52,20 @@ def compute_embeddings(conf, model):
     documents = json.load(open(documents_file))
     documents_with_embeddings = []
     splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=0,
-                                              separators=["\n\n", "\n", ". ", " ", ""],
+                                              separators=["\n\n", "\n", " ", ""],
                                               keep_separator=False)
-    with open("embeddings.bin", "wb") as emb:
+    with open("embeddings.bin", "wb") as out:
         for doc in tqdm(documents):
-            text = "\n".join(get_pages_content(doc['url']))
-            texts = [t.replace('\n', ' ') for t in splitter.split_text(text)]
-            for t in texts:
-                log.debug(f"Text length: {len(t)} - ******{t}******")
+            text = get_pages_content(doc['url'])
+            texts = [t.replace('\n','') for t in splitter.split_text(text)]
             embeddings = encode(texts, model)
-            emb.write(embeddings.tobytes())
-            doc['nb_of_embeddings'] = len(embeddings)
+            out.write(embeddings.tobytes())
+            doc['nb_of_embeddings'] = embeddings.shape[0]
             documents_with_embeddings.append(doc)
+
+            log.debug("Embeddings shape " + str(embeddings.shape))
+            log.debug("------------------\n".join([f"{len(t)} \n {t} \n" for t in texts]))
+
 
     with open("documents_with_embeddings.json", "w") as f:
         json.dump(documents_with_embeddings, f, indent=2)
