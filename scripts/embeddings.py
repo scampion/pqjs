@@ -1,6 +1,7 @@
 import io
 import json
 import sys
+from concurrent.futures import ProcessPoolExecutor
 
 from tqdm import tqdm
 import requests
@@ -14,9 +15,14 @@ from text_splitter import RecursiveCharacterTextSplitter
 memory = Memory("cache", verbose=0)
 
 import logging
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.FileHandler('embeddings.log'))
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=0,
+                                          separators=["\n\n", "\n", " ", ""],
+                                          keep_separator=False)
 
 @memory.cache
 def get_binary_pdf_from_url(url):
@@ -27,8 +33,6 @@ def get_binary_pdf_from_url(url):
 @memory.cache
 def encode(texts, model):
     return model.encode(texts)
-
-
 
 
 @memory.cache
@@ -51,24 +55,27 @@ def compute_embeddings(conf, model):
     documents_file = conf.get('documents', 'documents.json')
     documents = json.load(open(documents_file))
     documents_with_embeddings = []
-    splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=0,
-                                              separators=["\n\n", "\n", " ", ""],
-                                              keep_separator=False)
     with open("embeddings.bin", "wb") as out:
-        for doc in tqdm(documents):
-            text = get_pages_content(doc['url'])
-            texts = [t.replace('\n','') for t in splitter.split_text(text)]
-            embeddings = encode(texts, model)
-            out.write(embeddings.tobytes())
-            doc['nb_of_embeddings'] = embeddings.shape[0]
-            documents_with_embeddings.append(doc)
-
-            log.debug("Embeddings shape " + str(embeddings.shape))
-            log.debug("------------------\n".join([f"{len(t)} \n {t} \n" for t in texts]))
-
+        with ProcessPoolExecutor(max_workers=2) as executor:
+            for doc, embeddings in tqdm(executor.map(_embeddings, documents, [model]*len(documents)), total=len(documents), colour='green'):
+                documents_with_embeddings.append(doc)
+                out.write(embeddings.tobytes())
 
     with open("documents_with_embeddings.json", "w") as f:
         json.dump(documents_with_embeddings, f, indent=2)
+
+
+def _embeddings(doc, model):
+    global  splitter
+    text = get_pages_content(doc['url'])
+    texts = [t.replace('\n', '') for t in splitter.split_text(text)]
+    embeddings = encode(texts, model)
+    doc['nb_of_embeddings'] = embeddings.shape[0]
+
+    log.debug("Embeddings shape " + str(embeddings.shape))
+    log.debug("------------------\n".join([f"{len(t)} \n {t} \n" for t in texts]))
+
+    return doc, embeddings
 
 
 if __name__ == "__main__":

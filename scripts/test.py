@@ -30,7 +30,7 @@ model = SentenceTransformer(model_name)
 #query = " ".join(sys.argv[2:])
 #query = "organic pet food"
 
-query = open("query.txt").read()
+query = open("queries.txt").readlines()[0].strip()
 query = model.encode(query)
 
 
