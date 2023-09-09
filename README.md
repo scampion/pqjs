@@ -1,6 +1,21 @@
-🔎 EDGE AI Neural Search Engine  
-===============================
+Transformer-based Embedding Retrieval with Product Quantization for Edge Computing
+=================================================================================
 
-This is a search engine based on neural search technics.
-It is designed to be used on edge devices, such as mobile phones or web browsers.
+This repository contains the code for the paper "Transformer-based Embedding Retrieval with Product Quantization for Edge Computing" 
+
+## Requirements
+
+### Python packages
+- [nanopq (version using scikit-learn for the kmeans and multithreated)](git+https://github.com/scampion/nanopq.git@main)
+
+
+## Usage
+
+### Author
+- [Sébastien Campion](https://scamp.fr)
+
+### License
+- [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
+For other licenses, please contact the author.
+
 

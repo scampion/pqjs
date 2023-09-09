@@ -1,35 +1,35 @@
+#
+# Copyright (c) 2023 Sebastien Campion.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
 from __future__ import annotations
 
-import copy
-import logging
 import re
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from enum import Enum
+from abc import abstractmethod
 from typing import (
-    AbstractSet,
     Any,
     Callable,
-    Collection,
-    Dict,
     Iterable,
     List,
-    Literal,
     Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypedDict,
-    TypeVar,
-    Union,
-    cast,
 )
 
 
 def _split_text_with_regex(
         text: str, separator: str, keep_separator: bool
 ) -> List[str]:
-    # Now that we have the separator, split the text
     if separator:
         if keep_separator:
             # The parentheses in the pattern keep the delimiters in the result.
@@ -46,7 +46,6 @@ def _split_text_with_regex(
 
 
 class TextSplitter():
-    """Interface for splitting text into chunks."""
 
     def __init__(
             self,

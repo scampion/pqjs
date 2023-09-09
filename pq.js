@@ -1,3 +1,28 @@
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this page.
+
+Copyright (C) 2014  Sebastien Campion
+
+The JavaScript code in this page is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this page.
+*/
+
 // Function to calculate the Euclidean distance between two vectors
 
 function euclideanDistance(vector1, vector2) {
@@ -12,19 +37,6 @@ function euclideanDistance(vector1, vector2) {
 }
 
 
-function rotate(vecs, R) { //to finish
-    if (!(vecs instanceof Float32Array)) {
-        throw new Error("Input vectors must be of type Float32Array");
-    }
-    console.log(R)
-    const results = new Float32Array(vecs.length);
-    for(let i = 0; i < vecs.length; i++) {
-        for (let j = 0; j < R.length; j++) {
-            results[i] += vecs[i] * R[j];
-        }
-    }
-    return results;
-}
 
 function vq(obs, code_book) {
     if (!obs || !Array.isArray(obs) || obs.length === 0 || !code_book || !Array.isArray(code_book) || code_book.length === 0) {
