@@ -1,4 +1,4 @@
-all: documents.json vectors.bin pq.bin public
+all: documents.json vectors.bin pq.bin metadata.json public
 
 documents.json:
 	@echo "Generating documents.json"
@@ -20,6 +20,11 @@ vectors.bin: documents.json
 pq.bin: vectors.bin
 	@echo "Generating pq.bin"
 	@python3 scripts/pq.py conf.json
+
+metadata.json: pq.bin
+	@echo "Generating metadata.json"
+	@python3 scripts/metadata.py
+
 
 public:
 	@echo "Generating public files"
