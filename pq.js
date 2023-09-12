@@ -129,10 +129,8 @@ function computeSortedIndicesByDistance(queryVector, vectorList) {
 function argsort(array) {
   // Create an array of indices [0, 1, 2, ...] for the input array
   const indices = Array.from(array.keys());
-
   // Sort the indices based on the values in the input array
   indices.sort((a, b) => array[a] - array[b]);
-
   return indices;
 }
 
@@ -172,6 +170,8 @@ function get_indices(documents){
 }
 
 
+
+
 function feature_position_to_doc_id(sortedIndices, indices, max_results) {
     const doc_ids_results = {};
     //const sortedIndices = distancesWithIndices.map((item) => item.index); // use dietance in a future version
@@ -187,29 +187,11 @@ function feature_position_to_doc_id(sortedIndices, indices, max_results) {
     return doc_ids_results;
 }
 
-function normalize(results) {
-    const total = Object.values(results).reduce((acc, val) => acc + val, 0);
-    const normalizedResults = {};
-    for (const key in results) {
-        normalizedResults[key] = results[key] / total;
-    }
-    return normalizedResults;
-}
-
-function enrich_metadata(sortedResults, documents) {
-    const enrichedResults = [];
-    sortedResults.forEach(([key, value], index) => {
-        const doc = documents[key];
-        enrichedResults.push({
-            rank: index,
-            score: value,
-            ...doc
-        });
-    });
-    return enrichedResults;
-}
 
 function dtable(query, codewords, Ds, M, Ks) {
+  if (Ks === undefined) {
+      throw new Error('Ks value must be defined');
+  }
   const D = query.length;
   if (D !== Ds * M) {
     throw new Error('Input dimension must be Ds * M');
@@ -247,19 +229,44 @@ function adist(codes, dtable) {
   return dists;
 }
 
+function _search(dists, indices, documents, k_max=100){
+    const doc_counter = {};
+
+    // Calculate the indices of the sorted dists array
+    const sortedIndices = dists.map((_, i) => i).sort((a, b) => dists[a] - dists[b]);
+
+    console.log("")
+
+    // Iterate over the first k_max sorted indices
+    for (let i = 0; i < k_max && i < sortedIndices.length; i++) {
+        const doc_i = binarySearch(indices, sortedIndices[i]);
+        if (!doc_counter[doc_i]) {
+            doc_counter[doc_i] = [];
+        }
+        doc_counter[doc_i].push(dists[sortedIndices[i]]);
+    }
+
+    const sortedDocCounter = Object.entries(doc_counter).sort((a, b) => {
+        const meanA = a[1].reduce((acc, val) => acc + val, 0) / a[1].length;
+        const meanB = b[1].reduce((acc, val) => acc + val, 0) / b[1].length;
+        return meanA - meanB;
+    });
+
+    const results = [];
+    for (let i = 0; i < sortedDocCounter.length; i++) {
+        const doc = documents[sortedDocCounter[i][0]];
+        results.push(doc);
+    }
+    return results;
+}
 
 function search(documents, query, codewords, vectors, conf, max_results){
     const indices = get_indices(documents);
     //let query_q = encode(query, codewords, conf['dim'] / conf['M'], conf['M'], Uint8Array);
     const dist_table = dtable(query, codewords,conf['dim'] / conf['M'], conf['M'], conf['Ks']);
     const distances = adist(vectors, dist_table);
-    const indices_sorted = argsort(distances)
-    console.log(indices_sorted);
-    const results = feature_position_to_doc_id(indices_sorted, indices, max_results);
-    const normalizedResults = normalize(results);
-    var items = Object.keys(normalizedResults).map((key) => { return [key, normalizedResults[key]] });
-    items.sort((first, second) => second[1] - first[1]);
-    return enrich_metadata(items, documents);
+    const results =  _search(distances, indices, documents, 100);
+    return results;
 
 }
 
