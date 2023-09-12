@@ -23,8 +23,75 @@ through which recipients can access the Corresponding Source.
 for the JavaScript code in this page.
 */
 
-// Function to calculate the Euclidean distance between two vectors
+const top = 0;
+const parent = i => ((i + 1) >>> 1) - 1;
+const left = i => (i << 1) + 1;
+const right = i => (i + 1) << 1;
 
+class HeapSort {
+  constructor(comparator = (a, b) => a < b) {
+    this._heap = [];
+    this._comparator = comparator;
+  }
+  size() {
+    return this._heap.length;
+  }
+  isEmpty() {
+    return this.size() == 0;
+  }
+  peek() {
+    return this._heap[top];
+  }
+  push(values) {
+    values.forEach(value => {
+      this._heap.push(value);
+      this._siftUp();
+    });
+    return this.size();
+  }
+  pop() {
+    const poppedValue = this.peek();
+    const bottom = this.size() - 1;
+    if (bottom > top) {
+      this._swap(top, bottom);
+    }
+    this._heap.pop();
+    this._siftDown();
+    return poppedValue;
+  }
+  replace(value) {
+    const replacedValue = this.peek();
+    this._heap[top] = value;
+    this._siftDown();
+    return replacedValue;
+  }
+  _greater(i, j) {
+    return this._comparator(this._heap[i], this._heap[j]);
+  }
+  _swap(i, j) {
+    [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
+  }
+  _siftUp() {
+    let node = this.size() - 1;
+    while (node > top && this._greater(node, parent(node))) {
+      this._swap(node, parent(node));
+      node = parent(node);
+    }
+  }
+  _siftDown() {
+    let node = top;
+    while (
+      (left(node) < this.size() && this._greater(left(node), node)) ||
+      (right(node) < this.size() && this._greater(right(node), node))
+    ) {
+      let maxChild = (right(node) < this.size() && this._greater(right(node), left(node))) ? right(node) : left(node);
+      this._swap(node, maxChild);
+      node = maxChild;
+    }
+  }
+}
+
+// Function to calculate the Euclidean distance between two vectors
 function euclideanDistance(vector1, vector2) {
     if (vector1.length !== vector2.length) {
         throw new Error('Vectors must have the same dimensionality for distance calculation.');
@@ -104,40 +171,6 @@ function binarySearch(arr, target) {
   return left;
 }
 
-// Function to compute indices of sorted distances between a query vector and a list of vectors
-function computeSortedIndicesByDistance(queryVector, vectorList) {
-    const distancesWithIndices = [];
-    for (let i = 0; i < vectorList.length; i++) {
-        const vector = vectorList[i];
-        try {
-            const distance = euclideanDistance(queryVector, vector);
-            distancesWithIndices.push({index: i, distance: distance});
-        } catch (error) {
-            console.error(`Error computing distance for vector ${i}: ${error.message} ` + vector.length + " != " + queryVector.length);
-        }
-    }
-
-    // Sort the distancesWithIndices array based on distances
-    distancesWithIndices.sort((a, b) => a.distance - b.distance);
-
-    // Extract and return the sorted indices
-    //const sortedIndices = distancesWithIndices.map((item) => item.index);
-    //return sortedIndices;
-    return distancesWithIndices;
-}
-
-function argsort(array) {
-  // Create an array of indices [0, 1, 2, ...] for the input array
-  const indices = Array.from(array.keys());
-  // Sort the indices based on the values in the input array
-  indices.sort((a, b) => array[a] - array[b]);
-  return indices;
-}
-
-
-
-
-
 async function loadBinaryFile(filePath, vectorSize) {
     try {
         // Read the binary file synchronously.
@@ -167,24 +200,6 @@ function get_indices(documents){
       indices[i] += indices[i - 1];
     }
     return indices;
-}
-
-
-
-
-function feature_position_to_doc_id(sortedIndices, indices, max_results) {
-    const doc_ids_results = {};
-    //const sortedIndices = distancesWithIndices.map((item) => item.index); // use dietance in a future version
-    let nb_of_feats = 0;
-    for (let i = 0; i < sortedIndices.length; i++) {
-        const doc_i = binarySearch(indices, sortedIndices[i]);
-        doc_ids_results[doc_i] = (doc_ids_results[doc_i] || 0) + 1;
-        nb_of_feats += 1;
-        if (Object.keys(doc_ids_results).length > max_results && nb_of_feats > max_results*max_results ) {
-            break;
-        }
-    }
-    return doc_ids_results;
 }
 
 
@@ -229,21 +244,29 @@ function adist(codes, dtable) {
   return dists;
 }
 
+
 function _search(dists, indices, documents, k_max=100){
     const doc_counter = {};
-
     // Calculate the indices of the sorted dists array
-    const sortedIndices = dists.map((_, i) => i).sort((a, b) => dists[a] - dists[b]);
-
-    console.log("")
+    let sortedIndices = [];
+    // complete sort
+    // sortedIndices = dists.map((_, i) => i).sort((a, b) => dists[a] - dists[b]);
+    // heap sort
+    const queue = new HeapSort();
+    queue.push(dists)
+    for(let i = 0; i < k_max; i++){
+        const d = queue.pop();
+        const ind = dists.indexOf(d)
+        sortedIndices.push([ind, d]);
+    }
 
     // Iterate over the first k_max sorted indices
     for (let i = 0; i < k_max && i < sortedIndices.length; i++) {
-        const doc_i = binarySearch(indices, sortedIndices[i]);
+        const doc_i = binarySearch(indices, sortedIndices[i][0]);
         if (!doc_counter[doc_i]) {
             doc_counter[doc_i] = [];
         }
-        doc_counter[doc_i].push(dists[sortedIndices[i]]);
+        doc_counter[doc_i].push(dists[sortedIndices[i][1]]);
     }
 
     const sortedDocCounter = Object.entries(doc_counter).sort((a, b) => {
@@ -262,10 +285,9 @@ function _search(dists, indices, documents, k_max=100){
 
 function search(documents, query, codewords, vectors, conf, max_results){
     const indices = get_indices(documents);
-    //let query_q = encode(query, codewords, conf['dim'] / conf['M'], conf['M'], Uint8Array);
     const dist_table = dtable(query, codewords,conf['dim'] / conf['M'], conf['M'], conf['Ks']);
     const distances = adist(vectors, dist_table);
-    const results =  _search(distances, indices, documents, 100);
+    const results = _search(distances, indices, documents, 25);
     return results;
 
 }
