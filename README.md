@@ -3,6 +3,9 @@ Transformer-based Embedding Retrieval with Product Quantization for Edge Computi
 
 This repository contains the code for the paper "Transformer-based Embedding Retrieval with Product Quantization for Edge Computing" 
 
+Demo : https://dev7384.dctawdl2zqela.amplifyapp.com/
+
+
 ## Requirements
 
 ### Python packages
