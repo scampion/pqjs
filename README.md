@@ -1,7 +1,9 @@
 Transformer-based Embedding Retrieval with Product Quantization for Edge Computing
 =================================================================================
 
-This repository contains the code for the paper "Transformer-based Embedding Retrieval with Product Quantization for Edge Computing" 
+Implementation of "vector database" embedded in the browser thanks to JS and Product Quantization compression. 
+Thanks to the Transformer.js library the query is computed in the web page.
+The asymmetric distance computation is done also locally thanks to the codewords and pqcodes, finally, a heap sort is used to find similar vectors.
 
 Demo : https://dev7384.dctawdl2zqela.amplifyapp.com/
 
